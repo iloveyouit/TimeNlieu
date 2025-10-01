@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: hsl(210 20% 98%);
+  --foreground: hsl(222 47% 11%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222 47% 11%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(222 47% 11%);
+  --primary: hsl(217 91% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(210 40% 96%);
+  --secondary-foreground: hsl(222 47% 11%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215 16% 47%);
+  --accent: hsl(210 40% 96%);
+  --accent-foreground: hsl(222 47% 11%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --success: hsl(158 64% 52%);
+  --success-foreground: hsl(0 0% 100%);
+  --warning: hsl(43 96% 56%);
+  --warning-foreground: hsl(222 47% 11%);
+  --border: hsl(214 32% 91%);
+  --input: hsl(214 32% 91%);
+  --ring: hsl(217 91% 60%);
+  --radius: 0.5rem;
+}
+
+.dark {
+  --background: hsl(222 47% 11%);
+  --foreground: hsl(210 40% 98%);
+  --card: hsl(222 47% 15%);
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(222 47% 15%);
+  --popover-foreground: hsl(210 40% 98%);
+  --primary: hsl(217 91% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --secondary: hsl(217 19% 27%);
+  --secondary-foreground: hsl(210 40% 98%);
+  --muted: hsl(217 19% 27%);
+  --muted-foreground: hsl(215 20% 65%);
+  --accent: hsl(217 19% 27%);
+  --accent-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 84% 60%);
+  --destructive-foreground: hsl(0 0% 100%);
+  --success: hsl(158 64% 52%);
+  --success-foreground: hsl(0 0% 100%);
+  --warning: hsl(43 96% 56%);
+  --warning-foreground: hsl(222 47% 11%);
+  --border: hsl(217 19% 27%);
+  --input: hsl(217 19% 27%);
+  --ring: hsl(217 91% 60%);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(210 40% 96%);
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(214 32% 91%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 16% 47%);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out;
+}

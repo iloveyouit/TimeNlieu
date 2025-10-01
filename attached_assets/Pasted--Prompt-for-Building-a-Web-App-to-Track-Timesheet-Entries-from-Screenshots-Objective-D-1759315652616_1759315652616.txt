@@ -1,0 +1,69 @@
+**Prompt for Building a Web App to Track Timesheet Entries from Screenshots**
+
+---
+
+### Objective:
+Develop a web application that allows users to easily track and manage timesheet entries by extracting details from uploaded screenshots. The app should automatically calculate and track "lieu time," which is earned when total working hours exceed 40 hours in a week.
+
+### Features:
+
+1. **User Authentication:**
+   - Implement secure user registration and login system.
+
+2. **Screenshot Upload:**
+   - Allow users to upload screenshots of their timesheets in various formats (e.g., JPEG, PNG).
+   - Provide drag-and-drop functionality for ease of use.
+
+3. **Optical Character Recognition (OCR):**
+   - Integrate OCR technology to accurately extract text from uploaded screenshots.
+   - The extracted data should include the date, hours worked per day, and any other relevant details.
+
+4. **Timesheet Entry Management:**
+   - Display extracted timesheet data in a clean and organized manner.
+   - Allow users to manually edit entries in case of OCR errors.
+   - Provide options to add, delete, or modify entries.
+
+5. **Lieu Time Calculation:**
+   - Automatically calculate total hours worked each week.
+   - Track lieu balance by recognizing any hours worked over 40 per week.
+   - Display current lieu balance prominently on the dashboard.
+
+6. **User Interface:**
+   - Design a user-friendly and responsive interface accessible on desktops and mobile devices.
+   - Use charts or graphs to visually represent weekly hours and lieu time accumulation.
+
+7. **Notifications:**
+   - Implement notification system to alert users of large changes or inconsistencies in hours.
+   - Provide updates on lieu balance and upcoming changes.
+
+8. **Data Storage:**
+   - Securely store user data, including timesheet entries and lieu calculations.
+   - Enable data export options, such as CSV or PDF, for user reports.
+
+9. **Admin Panel:**
+   - Develop an admin panel for managing user accounts and overseeing data accuracy.
+
+10. **Integration and APIs:**
+    - Potential to integrate with external calendar or HR systems for cross-platform data sync.
+
+### Technical Specifications:
+
+- **Frontend Tech Stack:** React.js or Angular for dynamic UI.
+- **Backend Tech Stack:** Node.js with Express.js or Python with Django/Flask.
+- **Database:** Use MongoDB or PostgreSQL for storing user data.
+- **OCR Service:** Integrate with Tesseract or Google Cloud Vision for text recognition.
+- **Hosting:** Deploy with AWS or Heroku.
+
+### Workflow:
+
+1. User logs in or signs up for an account.
+2. The user uploads a screenshot of their timesheet.
+3. The app uses OCR technology to extract relevant data.
+4. Timesheet data is processed and displayed for user confirmation/editing.
+5. Weekly hours are calculated, and any hours over 40 are added to lieu balance.
+6. User can view and manage timesheet entries and lieu balance from the dashboard.
+7. Notifications inform users of any significant updates or discrepancies.
+
+---
+
+**End of Prompt**
