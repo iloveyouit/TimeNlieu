@@ -45,7 +45,7 @@ NEXTAUTH_URL="http://localhost:3000"
 
 ### 4. Database Setup
 
-Migrations run automatically when the dev server starts.  To run
+Migrations run automatically when the dev server starts. To run
 them manually:
 
 ```bash
@@ -66,14 +66,14 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ## 🐳 Docker
 
 The application ships as a single container with SQLite on a named
-volume.  No external database is required.
+volume. No external database is required.
 
 ```bash
 docker compose up -d
 ```
 
 Migrations and the seed admin account are handled automatically on
-container start.  The database persists at `/app/data/dev.db` inside
+container start. The database persists at `/app/data/dev.db` inside
 the container across restarts.
 
 ---
@@ -81,8 +81,28 @@ the container across restarts.
 ## 📖 Development Notes
 
 - **Client/Server Components**: This project strictly follows Next.js 15 architectural patterns. Interactive components are marked with `"use client"`.
-- **Authentication**: Credentials are verified against the `users` table using bcrypt.  A seed admin account (`test@example.com` / `password`) is created automatically on first run.
+- **Authentication**: Credentials are verified against the `users` table using bcrypt. A seed admin account (`test@example.com` / `password`) is created automatically on first run.
 - **Database**: The database is local SQLite (`dev.db`). The schema is defined in `src/db/schema.ts`.
+
+## ❓ Troubleshooting
+
+### Database Migration Errors
+
+If you encounter `SqliteError: table ... already exists` when starting the server, it usually means your local `dev.db` is out of sync with the migration history.
+
+**Solution: Reset the Local Database**
+
+1.  Stop the development server.
+2.  Delete the local database files:
+    ```bash
+    rm dev.db dev.db-shm dev.db-wal
+    ```
+3.  Restart the server:
+    ```bash
+    npm run dev
+    ```
+
+The application will automatically recreate the database and seed it with the default admin account.
 
 ## 📜 License
 
