@@ -1,7 +1,19 @@
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
+import { EntriesGrid } from "@/app/entries/entries-grid";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getWeekDataForUser, startOfWeekUtc } from "@/lib/timesheet";
 
-export default function Entries() {
+export default async function Entries() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) {
+    return null;
+  }
+  const weekStartDate = startOfWeekUtc(Date.now());
+  const initialData = await getWeekDataForUser(userId, weekStartDate);
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <Sidebar />
@@ -11,13 +23,7 @@ export default function Entries() {
           <div className="flex items-center">
             <h1 className="text-lg font-semibold md:text-2xl">Entries</h1>
           </div>
-          <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
-            <div className="flex flex-col items-center gap-1 text-center">
-              <h3 className="text-2xl font-bold tracking-tight">
-                You have no timesheet entries.
-              </h3>
-            </div>
-          </div>
+          <EntriesGrid initialData={initialData} />
         </main>
       </div>
     </div>
