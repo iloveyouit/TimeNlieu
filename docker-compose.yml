@@ -1,0 +1,26 @@
+services:
+  timenlieu:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - timenlieu_data:/app/data
+    env_file:
+      - .env
+    environment:
+      # Point the database onto the persistent volume.  Overrides the
+      # local-dev value in .env so that data survives container restarts.
+      - DATABASE_URL=file:/app/data/dev.db
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:3000',r=>process.exit(r.statusCode<400?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  timenlieu_data:
