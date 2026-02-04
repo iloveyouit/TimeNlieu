@@ -4,5 +4,8 @@ export async function register() {
     const { db } = await import('@/db');
 
     await migrate(db, { migrationsFolder: './drizzle' });
+
+    const { seedDatabase } = await import('@/db/seed');
+    await seedDatabase();
   }
 }

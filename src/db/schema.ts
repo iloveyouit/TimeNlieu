@@ -1,16 +1,17 @@
 import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
 
-export const users = sqliteTable('user', {
+export const users = sqliteTable('users', {
   id: text('id').notNull().primaryKey(),
   name: text('name'),
-  email: text('email').notNull(),
+  email: text('email').notNull().unique(),
   emailVerified: integer('emailVerified', { mode: 'timestamp_ms' }),
   image: text('image'),
+  password: text('password'),
   isAdmin: integer('isAdmin', { mode: 'boolean' }).default(false),
 });
 
 export const accounts = sqliteTable(
-  'account',
+  'accounts',
   {
     userId: text('userId')
       .notNull()
@@ -31,7 +32,7 @@ export const accounts = sqliteTable(
   })
 );
 
-export const sessions = sqliteTable('session', {
+export const sessions = sqliteTable('sessions', {
   sessionToken: text('sessionToken').notNull().primaryKey(),
   userId: text('userId')
     .notNull()
@@ -40,7 +41,7 @@ export const sessions = sqliteTable('session', {
 });
 
 export const verificationTokens = sqliteTable(
-  'verificationToken',
+  'verificationTokens',
   {
     identifier: text('identifier').notNull(),
     token: text('token').notNull(),
