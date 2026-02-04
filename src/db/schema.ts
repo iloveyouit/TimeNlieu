@@ -52,26 +52,58 @@ export const verificationTokens = sqliteTable(
   })
 );
 
+export const projects = sqliteTable('projects', {
+  id: text('id').notNull().primaryKey(),
+  name: text('name').notNull(),
+  code: text('code').notNull(),
+  clientName: text('clientName'),
+  isActive: integer('isActive', { mode: 'boolean' }).default(true),
+});
+
+export const projectTasks = sqliteTable('projectTasks', {
+  id: text('id').notNull().primaryKey(),
+  projectId: text('projectId')
+    .notNull()
+    .references(() => projects.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  code: text('code'),
+});
+
+export const roles = sqliteTable('roles', {
+  id: text('id').notNull().primaryKey(),
+  name: text('name').notNull(),
+});
+
 export const timesheetEntries = sqliteTable('timesheetEntries', {
   id: text('id').notNull().primaryKey(),
   date: integer('date', { mode: 'timestamp_ms' }).notNull(),
   hours: real('hours').notNull(),
   description: text('description'),
+  projectId: text('projectId').references(() => projects.id, { onDelete: 'set null' }),
+  taskId: text('taskId').references(() => projectTasks.id, { onDelete: 'set null' }),
+  roleId: text('roleId').references(() => roles.id, { onDelete: 'set null' }),
+  entryType: text('entryType').notNull().default('Work'),
+  status: text('status').notNull().default('Draft'),
   userId: text('userId')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
 });
 
-export const weeklySummaries = sqliteTable('weeklySummaries', {
+export const lieuLedger = sqliteTable('lieuLedger', {
   id: text('id').notNull().primaryKey(),
-  weekStartDate: integer('weekStartDate', { mode: 'timestamp_ms' }).notNull(),
-  weekEndDate: integer('weekEndDate', { mode: 'timestamp_ms' }).notNull(),
-  totalHours: real('totalHours').notNull(),
-  overtimeHours: real('overtimeHours').notNull(),
-  lieuBalance: real('lieuBalance').notNull(),
   userId: text('userId')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  weekStartDate: integer('weekStartDate', { mode: 'timestamp_ms' }).notNull(),
+  totalHours: real('totalHours').notNull(),
+  overtimeHours: real('overtimeHours').notNull(),
+  lieuEarned: real('lieuEarned').notNull(),
+  runningBalance: real('runningBalance').notNull(),
+});
+
+export const config = sqliteTable('config', {
+  key: text('key').notNull().primaryKey(),
+  value: real('value').notNull(),
 });
 
 export const notifications = sqliteTable('notifications', {
