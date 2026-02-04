@@ -1,7 +1,11 @@
 import { db } from "@/db";
 import { lieuLedger, projects, timesheetEntries } from "@/db/schema";
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
-import { getWeeklyThreshold, startOfWeekUtc, weekRangeUtc } from "@/lib/timesheet";
+import {
+  getWeeklyThreshold,
+  startOfWeekUtc,
+  weekRangeUtc,
+} from "@/lib/timesheet";
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -28,9 +32,12 @@ export async function getDashboardData(userId: string) {
         .where(
           and(
             eq(timesheetEntries.userId, userId),
-            gte(timesheetEntries.date, currentWeekStart - 3 * WEEK_MS),
-            lt(timesheetEntries.date, weekEnd)
-          )
+            gte(
+              timesheetEntries.date,
+              new Date(currentWeekStart - 3 * WEEK_MS),
+            ),
+            lt(timesheetEntries.date, new Date(weekEnd)),
+          ),
         ),
       db
         .select({
@@ -41,11 +48,17 @@ export async function getDashboardData(userId: string) {
         .where(
           and(
             eq(timesheetEntries.userId, userId),
-            gte(timesheetEntries.date, currentWeekStart - 11 * WEEK_MS),
-            lt(timesheetEntries.date, weekEnd)
-          )
+            gte(
+              timesheetEntries.date,
+              new Date(currentWeekStart - 11 * WEEK_MS),
+            ),
+            lt(timesheetEntries.date, new Date(weekEnd)),
+          ),
         ),
-      db.select({ id: projects.id, name: projects.name, code: projects.code }).from(projects).orderBy(asc(projects.name)),
+      db
+        .select({ id: projects.id, name: projects.name, code: projects.code })
+        .from(projects)
+        .orderBy(asc(projects.name)),
       db
         .select()
         .from(lieuLedger)
@@ -57,7 +70,7 @@ export async function getDashboardData(userId: string) {
   const projectMap = new Map(projectsList.map((p) => [p.id, p]));
 
   const thisWeekTotal = entriesFourWeeks
-    .filter((entry) => entry.date >= weekStart && entry.date < weekEnd)
+    .filter((entry) => entry.date.getTime() >= weekStart && entry.date.getTime() < weekEnd)
     .reduce((sum, entry) => sum + entry.hours, 0);
 
   const thisWeekOvertime = Math.max(0, thisWeekTotal - threshold);
@@ -67,15 +80,19 @@ export async function getDashboardData(userId: string) {
 
   for (const entry of entriesFourWeeks) {
     const key = entry.projectId ?? "unassigned";
-    projectHoursFourWeeks.set(key, (projectHoursFourWeeks.get(key) ?? 0) + entry.hours);
-    if (entry.date >= weekStart && entry.date < weekEnd) {
+    projectHoursFourWeeks.set(
+      key,
+      (projectHoursFourWeeks.get(key) ?? 0) + entry.hours,
+    );
+    if (entry.date.getTime() >= weekStart && entry.date.getTime() < weekEnd) {
       projectHoursWeek.set(key, (projectHoursWeek.get(key) ?? 0) + entry.hours);
     }
   }
 
   const hoursByProjectWeek = Array.from(projectHoursWeek.entries())
     .map(([projectId, hours]) => {
-      const project = projectId === "unassigned" ? undefined : projectMap.get(projectId);
+      const project =
+        projectId === "unassigned" ? undefined : projectMap.get(projectId);
       return {
         name: toLabel(project),
         hours: Number(hours.toFixed(2)),
@@ -85,7 +102,8 @@ export async function getDashboardData(userId: string) {
 
   const hoursByProjectFourWeeks = Array.from(projectHoursFourWeeks.entries())
     .map(([projectId, hours]) => {
-      const project = projectId === "unassigned" ? undefined : projectMap.get(projectId);
+      const project =
+        projectId === "unassigned" ? undefined : projectMap.get(projectId);
       return {
         name: toLabel(project),
         hours: Number(hours.toFixed(2)),
@@ -95,7 +113,7 @@ export async function getDashboardData(userId: string) {
 
   const trendTotals = new Map<number, number>();
   for (const entry of entriesTrend) {
-    const weekStart = startOfWeekUtc(entry.date);
+    const weekStart = startOfWeekUtc(entry.date.getTime());
     trendTotals.set(weekStart, (trendTotals.get(weekStart) ?? 0) + entry.hours);
   }
 
