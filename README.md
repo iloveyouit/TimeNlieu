@@ -45,11 +45,15 @@ NEXTAUTH_URL="http://localhost:3000"
 
 ### 4. Database Setup
 
-Initialize the SQLite database and push the schema:
+Migrations run automatically when the dev server starts.  To run
+them manually:
 
 ```bash
-npx drizzle-kit push
+npm run db:migrate
 ```
+
+A seed admin account (`test@example.com` / `password`) is created
+on first run if the users table is empty.
 
 ### 5. Run Development Server
 
@@ -59,10 +63,25 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
+## 🐳 Docker
+
+The application ships as a single container with SQLite on a named
+volume.  No external database is required.
+
+```bash
+docker compose up -d
+```
+
+Migrations and the seed admin account are handled automatically on
+container start.  The database persists at `/app/data/dev.db` inside
+the container across restarts.
+
+---
+
 ## 📖 Development Notes
 
 - **Client/Server Components**: This project strictly follows Next.js 15 architectural patterns. Interactive components are marked with `"use client"`.
-- **Authentication**: A mock credential provider is currently implemented for testing (`test@example.com` / `password`).
+- **Authentication**: Credentials are verified against the `users` table using bcrypt.  A seed admin account (`test@example.com` / `password`) is created automatically on first run.
 - **Database**: The database is local SQLite (`dev.db`). The schema is defined in `src/db/schema.ts`.
 
 ## 📜 License

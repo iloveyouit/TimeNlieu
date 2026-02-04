@@ -21,9 +21,10 @@ equivalent, is the core of the product.
 
 The following work is already shipped and functional:
 
-- **Authentication** — NextAuth.js credentials provider, sign-in flow
-  fixed and working end-to-end.  Hardcoded test account
-  (`test@example.com` / `password`).
+- **Authentication** — NextAuth.js credentials provider backed by the
+  `users` table with bcrypt password hashing.  Sign-in flow working
+  end-to-end.  Seed admin account (`test@example.com` / `password`)
+  created on first startup via `src/db/seed.ts`.
 - **Docker** — multi-stage `Dockerfile`, `docker-compose.yml`, named
   volume for SQLite persistence, auto-migration via
   `src/instrumentation.ts` on container start.
@@ -37,26 +38,23 @@ The following work is already shipped and functional:
 - **UI library** — 47 Shadcn UI components installed.  Recharts,
   react-hook-form, zod, date-fns all available and unused so far.
 - **Build** — `next build` passes clean (zero errors, zero warnings).
+- **Server Actions** — mutation pattern established: Zod validation in
+  `src/lib/schemas.ts`, example Server Action in `src/lib/actions.ts`.
+  All future mutations follow this convention.
 
 ---
 
 ## Phase 1 — Technical Foundations
 
-**Status: mostly complete.**
+**Status: complete.**
 
-What remains:
-
-- **Remove Prisma artefacts.**  `prisma/schema.prisma` and the
-  `src/generated/prisma/` directory are dead code.  The generated client
-  is excluded from lint via an ignore rule but still ships in the repo.
-  Delete both and the ignore rule.
-- **Replace the hardcoded credential** in `src/lib/auth.ts`.  Wire the
-  credentials provider against the `users` table with bcrypt password
-  hashing.  Seed one admin account on first migration or first run.
-- **Establish the Server Action pattern.**  All future mutations will
-  use Next.js Server Actions (not dedicated API routes).  react-hook-form
-  + zod are already installed — pick a validation wrapper and document
-  the pattern in a single example before building Phase 3.
+- Prisma schema, migrations, and generated client deleted.  The dead
+  ESLint ignore rule for `src/generated/` removed.
+- Credentials provider wired against the `users` table with bcrypt.
+  `src/db/seed.ts` creates one admin account on first run; called from
+  `src/instrumentation.ts` after migrations.
+- Server Action convention documented by example: `src/lib/schemas.ts`
+  (Zod) and `src/lib/actions.ts` (`markNotificationRead`).
 
 ---
 
@@ -329,7 +327,7 @@ standalone tool.
 ## Execution Order
 
 ```
-Phase 1   Technical Foundations          ← mostly done; finish cleanup
+Phase 1   Technical Foundations          ← complete
 Phase 2   Data Model Expansion          ← schema before any feature work
 Phase 3   Weekly Timesheet Grid         ← the core product
 Phase 4   Lieu Calculation Engine       ← the core business logic
