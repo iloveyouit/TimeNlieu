@@ -52,3 +52,7 @@ export const deleteRowSchema = z.object({
 export const submitWeekSchema = z.object({
   weekStartDate: z.number(),
 });
+
+export const monthDataSchema = z.object({
+  monthStartDate: z.number(),
+});

@@ -1,7 +1,19 @@
 import { Header } from "@/components/header";
 import { Sidebar } from "@/components/sidebar";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { getMonthDataForUser, startOfMonthUtc } from "@/lib/calendar";
+import { CalendarView } from "@/app/calendar/calendar-view";
 
-export default function Calendar() {
+export default async function Calendar() {
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  if (!userId) {
+    return null;
+  }
+  const monthStartDate = startOfMonthUtc(Date.now());
+  const initialData = await getMonthDataForUser(userId, monthStartDate);
+
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <Sidebar />
@@ -11,13 +23,7 @@ export default function Calendar() {
           <div className="flex items-center">
             <h1 className="text-lg font-semibold md:text-2xl">Calendar</h1>
           </div>
-          <div className="flex flex-1 items-center justify-center rounded-lg border border-dashed shadow-sm">
-            <div className="flex flex-col items-center gap-1 text-center">
-              <h3 className="text-2xl font-bold tracking-tight">
-                Calendar view is not implemented yet.
-              </h3>
-            </div>
-          </div>
+          <CalendarView initialData={initialData} />
         </main>
       </div>
     </div>

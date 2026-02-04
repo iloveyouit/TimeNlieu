@@ -30,11 +30,18 @@ The following work is already shipped and functional:
   `src/instrumentation.ts` on container start.
 - **Database** — Drizzle ORM on SQLite.  Schema covers `users`,
   `accounts`, `sessions`, `verificationTokens`, `timesheetEntries`,
-  `weeklySummaries`, and `notifications`.  WAL mode and foreign keys
-  enabled.  Migration tracked in `drizzle/`.
-- **Page skeleton** — Dashboard, Entries, Upload, Calendar, Reports,
-  Admin pages exist with layout (sidebar + header) but no data or
-  interactive logic.
+  `projects`, `projectTasks`, `roles`, `lieuLedger`, `config`, and
+  `notifications`.  WAL mode and foreign keys enabled.  Migration
+  tracked in `drizzle/`.
+- **Entries grid** — Entries page is now an interactive weekly grid
+  with navigation, row management, inline hour entry, and live totals.
+- **Lieu ledger** — server-side recalculation on every entry change,
+  writing to `lieuLedger` with a configurable weekly threshold.
+- **Data import** — CSV import tooling available via
+  `scripts/import-timesheet-csv.mjs` with a generated example at
+  `data/imports/timesheet_hours.csv`.
+- **Page skeleton** — Dashboard, Upload, Calendar, Reports, Admin pages
+  exist with layout (sidebar + header) but no data or interactive logic.
 - **UI library** — 47 Shadcn UI components installed.  Recharts,
   react-hook-form, zod, date-fns all available and unused so far.
 - **Build** — `next build` passes clean (zero errors, zero warnings).
@@ -60,7 +67,7 @@ The following work is already shipped and functional:
 
 ## Phase 2 — Data Model Expansion
 
-**Status: pending.**
+**Status: complete.**
 
 The current `timesheetEntries` table is a single row per entry with
 `date + hours + description`.  The Dynamics 365 reference shows entries
@@ -93,14 +100,13 @@ lieuLedger — id, userId, weekStartDate, totalHours, overtimeHours,
 queryable without recalculating history.  The 40-hour weekly threshold
 is stored in a `config` table (or env var) — not a magic number.
 
-Generate and apply a Drizzle migration for the new schema before
-moving to Phase 3.
+Migration generated and applied.
 
 ---
 
 ## Phase 3 — Weekly Timesheet Grid
 
-**Status: pending.  Highest priority after the model is in place.**
+**Status: complete.**
 
 This is the daily-use interface.  Everything else in the app is a
 different view of the data this grid produces.
@@ -132,7 +138,7 @@ Key behaviours:
 
 ## Phase 4 — Lieu Time Calculation Engine
 
-**Status: pending.  Paired with Phase 3.**
+**Status: complete.**
 
 The business logic that turns a timesheet into a lieu tracker:
 
@@ -151,7 +157,7 @@ The business logic that turns a timesheet into a lieu tracker:
 
 ## Phase 5 — Dashboard
 
-**Status: pending.**
+**Status: complete.**
 
 The landing page after sign-in.  Four sections using Recharts (already
 a dependency) and Shadcn Card components (already available):
@@ -172,7 +178,7 @@ a dependency) and Shadcn Card components (already available):
 
 ## Phase 6 — Calendar View
 
-**Status: pending.**
+**Status: complete.**
 
 A monthly grid showing work patterns at a glance:
 
@@ -328,11 +334,11 @@ standalone tool.
 
 ```
 Phase 1   Technical Foundations          ← complete
-Phase 2   Data Model Expansion          ← schema before any feature work
-Phase 3   Weekly Timesheet Grid         ← the core product
-Phase 4   Lieu Calculation Engine       ← the core business logic
-Phase 5   Dashboard                     ← first polished view; needs 3 + 4
-Phase 6   Calendar View                 ← alternate view of the same data
+Phase 2   Data Model Expansion          ← complete
+Phase 3   Weekly Timesheet Grid         ← complete
+Phase 4   Lieu Calculation Engine       ← complete
+Phase 5   Dashboard                     ← complete
+Phase 6   Calendar View                 ← complete
 Phase 7   Reports & Export              ← output artefacts
 Phase 8   Screenshot Upload & OCR       ← input shortcut; high effort
 Phase 9   Notifications                 ← supporting feature
