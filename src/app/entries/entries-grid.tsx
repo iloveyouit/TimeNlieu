@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +47,7 @@ type CellState = {
   value: string;
   entryId?: string;
   status: "saved" | "dirty" | "saving";
+  error?: string | null;
 };
 
 type RowState = {
@@ -56,6 +58,7 @@ type RowState = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const HOURS_PATTERN = /^\d{0,2}(\.\d{0,2})?$/;
 
 const toIsoDate = (dateMs: number) => {
   const date = new Date(dateMs);
@@ -76,6 +79,38 @@ const weekStartFromToday = () => {
 
 const rowKey = (meta: RowMeta) =>
   `${meta.projectId ?? "null"}|${meta.taskId ?? "null"}|${meta.roleId ?? "null"}|${meta.entryType}`;
+
+const getRowStatus = (entries: Entry[], meta: RowMeta) => {
+  const statuses = entries
+    .filter(
+      (entry) =>
+        entry.projectId === meta.projectId &&
+        entry.taskId === meta.taskId &&
+        entry.roleId === meta.roleId &&
+        entry.entryType === meta.entryType
+    )
+    .map((entry) => entry.status);
+
+  if (statuses.includes("Approved")) return "Approved";
+  if (statuses.includes("Submitted")) return "Submitted";
+  if (statuses.includes("Recalled")) return "Recalled";
+  return "Draft";
+};
+
+const validateHours = (value: string) => {
+  if (value.trim() === "") return { valid: true, hours: 0 };
+  if (!HOURS_PATTERN.test(value)) {
+    return { valid: false, error: "Use up to 2 decimal places." };
+  }
+  const hours = Number.parseFloat(value);
+  if (!Number.isFinite(hours)) {
+    return { valid: false, error: "Enter a number." };
+  }
+  if (hours < 0 || hours > 24) {
+    return { valid: false, error: "Hours must be between 0 and 24." };
+  }
+  return { valid: true, hours };
+};
 
 const buildRows = (entries: Entry[], localRows: RowMeta[]) => {
   const byRow = new Map<string, RowState>();
@@ -196,6 +231,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
   };
 
   const handleCellChange = (rowId: string, dateKey: string, value: string) => {
+    const validation = validateHours(value);
     setRows((prev) =>
       prev.map((row) => {
         if (row.id !== rowId) return row;
@@ -208,6 +244,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
               value,
               entryId: existing?.entryId,
               status: "dirty",
+              error: validation.valid ? null : validation.error ?? null,
             },
           },
         };
@@ -218,7 +255,11 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
   const handleCellBlur = async (row: RowState, dateKey: string, dateMs: number) => {
     const cell = row.cells[dateKey];
     if (!cell || cell.status === "saving") return;
-    const hours = Number.parseFloat(cell.value);
+    const validation = validateHours(cell.value);
+    if (!validation.valid) {
+      return;
+    }
+    const hours = validation.hours ?? 0;
     setRows((prev) =>
       prev.map((item) =>
         item.id === row.id
@@ -226,7 +267,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
               ...item,
               cells: {
                 ...item.cells,
-                [dateKey]: { ...cell, status: "saving" },
+                [dateKey]: { ...cell, status: "saving", error: null },
               },
             }
           : item
@@ -246,6 +287,20 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
     setRows((prev) =>
       prev.map((item) => {
         if (item.id !== row.id) return item;
+        if (result?.error) {
+          return {
+            ...item,
+            cells: {
+              ...item.cells,
+              [dateKey]: {
+                value: cell.value,
+                entryId: cell.entryId,
+                status: "saved",
+                error: result.error,
+              },
+            },
+          };
+        }
         if (result?.deleted) {
           const nextCells = { ...item.cells };
           delete nextCells[dateKey];
@@ -259,6 +314,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
               value: Number.isFinite(hours) ? hours.toFixed(2) : "0.00",
               entryId: result?.entryId,
               status: "saved",
+              error: null,
             },
           },
         };
@@ -344,12 +400,15 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
             {rows.map((row) => {
               const total = rowTotals(row);
               const previousMeta = row.meta;
+              const rowStatus = getRowStatus(data.entries, row.meta);
+              const isLocked = rowStatus !== "Draft";
               return (
                 <tr key={row.id} className="border-t">
                   <td className="px-3 py-2">
                     <select
                       className="h-9 w-full rounded-md border bg-background px-2"
                       value={row.meta.projectId ?? ""}
+                      disabled={isLocked}
                       onChange={(event) => {
                         const nextMeta = {
                           ...row.meta,
@@ -371,6 +430,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
                     <select
                       className="h-9 w-full rounded-md border bg-background px-2"
                       value={row.meta.taskId ?? ""}
+                      disabled={isLocked}
                       onChange={(event) => {
                         const nextMeta = {
                           ...row.meta,
@@ -391,6 +451,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
                     <select
                       className="h-9 w-full rounded-md border bg-background px-2"
                       value={row.meta.roleId ?? ""}
+                      disabled={isLocked}
                       onChange={(event) => {
                         const nextMeta = {
                           ...row.meta,
@@ -411,6 +472,7 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
                     <select
                       className="h-9 w-full rounded-md border bg-background px-2"
                       value={row.meta.entryType}
+                      disabled={isLocked}
                       onChange={(event) => {
                         const nextMeta = {
                           ...row.meta,
@@ -426,33 +488,45 @@ export function EntriesGrid({ initialData }: { initialData: WeekData }) {
                   {days.map((day) => {
                     const cell = row.cells[day.dateKey];
                     const status = cell?.status ?? "saved";
+                    const error = cell?.error;
                     return (
                       <td key={day.dateKey} className="px-3 py-2">
                         <Input
                           type="number"
                           step="0.25"
                           min="0"
-                          className={
-                            status === "dirty"
-                              ? "border-amber-400"
-                              : status === "saving"
-                                ? "border-blue-400"
-                                : ""
-                          }
+                          max="24"
+                          disabled={isLocked}
+                          className={[
+                            status === "dirty" ? "border-amber-400" : "",
+                            status === "saving" ? "border-blue-400" : "",
+                            error ? "border-red-500" : "",
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
                           value={cell?.value ?? ""}
                           onChange={(event) =>
                             handleCellChange(row.id, day.dateKey, event.target.value)
                           }
                           onBlur={() => handleCellBlur(row, day.dateKey, day.date)}
+                          title={error ?? undefined}
                         />
                       </td>
                     );
                   })}
                   <td className="px-3 py-2 font-medium">
-                    {total.toFixed(2)}
+                    <div className="flex flex-col gap-1">
+                      <span>{total.toFixed(2)}</span>
+                      <Badge
+                        variant={rowStatus === "Draft" ? "secondary" : "default"}
+                        className="w-fit text-xs"
+                      >
+                        {rowStatus}
+                      </Badge>
+                    </div>
                   </td>
                   <td className="px-3 py-2">
-                    <Button variant="ghost" onClick={() => handleDeleteRow(row)}>
+                    <Button variant="ghost" onClick={() => handleDeleteRow(row)} disabled={isLocked}>
                       Delete
                     </Button>
                   </td>

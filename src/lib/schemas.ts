@@ -12,7 +12,13 @@ const nullableId = z.string().nullable().optional();
 
 export const upsertTimesheetEntrySchema = z.object({
   date: z.number(),
-  hours: z.number(),
+  hours: z
+    .number()
+    .min(0)
+    .max(24)
+    .refine((value) => Math.round(value * 100) / 100 === value, {
+      message: "Hours must have at most 2 decimal places.",
+    }),
   projectId: nullableId,
   taskId: nullableId,
   roleId: nullableId,
@@ -65,7 +71,35 @@ export const ocrReviewSchema = z.object({
       taskId: z.string().nullable().optional(),
       roleId: z.string().nullable().optional(),
       entryType: z.enum(["Work", "Admin"]).default("Work"),
-      hours: z.array(z.number()),
+      hours: z.array(
+        z
+          .number()
+          .min(0)
+          .max(24)
+          .refine((value) => Math.round(value * 100) / 100 === value, {
+            message: "Hours must have at most 2 decimal places.",
+          })
+      ),
     })
   ),
+});
+
+export const adminProjectSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1),
+  code: z.string().min(1),
+  clientName: z.string().optional().nullable(),
+  isActive: z.boolean().optional().default(true),
+});
+
+export const adminTaskSchema = z.object({
+  id: z.string().optional(),
+  projectId: z.string().min(1),
+  name: z.string().min(1),
+  code: z.string().optional().nullable(),
+});
+
+export const adminRoleSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().min(1),
 });

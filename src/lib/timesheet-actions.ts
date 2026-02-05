@@ -82,19 +82,25 @@ export async function upsertTimesheetEntry(input: unknown) {
     eq(timesheetEntries.entryType, payload.entryType)
   );
 
+  const [existing] = await db
+    .select({ id: timesheetEntries.id, status: timesheetEntries.status })
+    .from(timesheetEntries)
+    .where(baseWhere)
+    .limit(1);
+
   if (!Number.isFinite(hours) || hours <= 0) {
+    if (existing && existing.status !== "Draft") {
+      return { error: "Entry is locked." };
+    }
     await db.delete(timesheetEntries).where(baseWhere);
     await recalculateLieuLedgerForUser(userId);
     return { deleted: true };
   }
 
-  const [existing] = await db
-    .select({ id: timesheetEntries.id })
-    .from(timesheetEntries)
-    .where(baseWhere)
-    .limit(1);
-
   if (existing) {
+    if (existing.status !== "Draft") {
+      return { error: "Entry is locked." };
+    }
     await db
       .update(timesheetEntries)
       .set({ hours, status: payload.status ?? "Draft" })
@@ -138,7 +144,8 @@ export async function updateWeekRowMeta(input: unknown) {
       and(
         rowWhere(payload.previous, userId),
         gte(timesheetEntries.date, start),
-        lt(timesheetEntries.date, end)
+        lt(timesheetEntries.date, end),
+        eq(timesheetEntries.status, "Draft")
       )
     );
 }
@@ -155,7 +162,8 @@ export async function deleteWeekRow(input: unknown) {
       and(
         rowWhere(payload.row, userId),
         gte(timesheetEntries.date, start),
-        lt(timesheetEntries.date, end)
+        lt(timesheetEntries.date, end),
+        eq(timesheetEntries.status, "Draft")
       )
     );
   await recalculateLieuLedgerForUser(userId);

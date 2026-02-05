@@ -28,6 +28,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const toDateInput = (dateMs: number) => new Date(dateMs).toISOString().slice(0, 10);
+const clampHours = (value: number) => {
+  const rounded = Math.round(value * 100) / 100;
+  if (Number.isNaN(rounded)) return 0;
+  return Math.min(24, Math.max(0, rounded));
+};
 
 const startOfWeekUtc = (date: Date) => {
   const day = date.getUTCDay();
@@ -101,13 +106,13 @@ export function UploadView({
   };
 
   const handleHourChange = (rowIndex: number, dayIndex: number, value: string) => {
-    const hours = Number.parseFloat(value);
+    const hours = clampHours(Number.parseFloat(value));
     setReview((prev) => {
       if (!prev) return prev;
       const rows = [...prev.rows];
       const row = { ...rows[rowIndex] };
       const nextHours = [...row.hours];
-      nextHours[dayIndex] = Number.isFinite(hours) ? hours : 0;
+      nextHours[dayIndex] = hours;
       row.hours = nextHours;
       rows[rowIndex] = row;
       return { ...prev, rows };

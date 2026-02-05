@@ -15,11 +15,24 @@ export async function seedDatabase() {
     });
   }
 
-  const [existingConfig] = await db.select().from(config).limit(1);
-  if (!existingConfig) {
+  const configRows = await db.select().from(config);
+  const configKeys = new Set(configRows.map((row) => row.key));
+  if (!configKeys.has('weekly_threshold_hours')) {
     await db.insert(config).values({
       key: 'weekly_threshold_hours',
       value: 40,
+    });
+  }
+  if (!configKeys.has('notifications_weekly_reminder_day')) {
+    await db.insert(config).values({
+      key: 'notifications_weekly_reminder_day',
+      value: 5,
+    });
+  }
+  if (!configKeys.has('notifications_weekly_reminder_hour')) {
+    await db.insert(config).values({
+      key: 'notifications_weekly_reminder_hour',
+      value: 16,
     });
   }
 

@@ -1,4 +1,5 @@
 import { sqliteTable, text, integer, real, primaryKey } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 
 export const users = sqliteTable('users', {
   id: text('id').notNull().primaryKey(),
@@ -113,6 +114,9 @@ export const notifications = sqliteTable('notifications', {
   message: text('message').notNull(),
   isRead: integer('isRead', { mode: 'boolean' }).default(false),
   metadata: text('metadata', { mode: 'json' }),
+  createdAt: integer('createdAt', { mode: 'timestamp_ms' })
+    .notNull()
+    .default(sql`(strftime('%s','now') * 1000)`),
   userId: text('userId')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),

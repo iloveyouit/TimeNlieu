@@ -1,91 +1,86 @@
 "use server";
 
+import crypto from "crypto";
+import { and, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { processImage } from "@/lib/ocr";
-import { db } from "@/db";
-import { timesheetEntries, lieuLedger, config } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { recalculateLieuLedgerForUser } from "@/lib/timesheet";
-import { getServerSession } from "next-auth";
+import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
+import { db } from "@/db";
+import { timesheetEntries } from "@/db/schema";
+import { ocrReviewSchema } from "@/lib/schemas";
+import { recalculateLieuLedgerForUser } from "@/lib/timesheet";
+import { runOcrStub } from "@/lib/ocr";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function stubOcrFromImage(formData: FormData) {
-  const file = formData.get("file") as File;
-  if (!file) {
-    throw new Error("No file uploaded");
-  }
-
-  // Call the OCR service (simulated or real)
-  const ocrResult = await processImage(file);
-
-  // In a real app, we might infer the week start from the image text.
-  // For now, default to the current week's start.
-  const now = new Date();
-  const day = now.getUTCDay();
-  const weekStartDate = Date.UTC(
-    now.getUTCFullYear(),
-    now.getUTCMonth(),
-    now.getUTCDate() - day
-  );
-
-  return {
-    weekStartDate,
-    rows: ocrResult.data,
-  };
+  void formData;
+  return runOcrStub();
 }
 
-type ReviewRow = {
-  projectId: string | null;
-  taskId: string | null;
-  roleId: string | null;
-  entryType: "Work" | "Admin";
-  hours: number[];
-};
-
-type ReviewData = {
-  weekStartDate: number;
-  rows: ReviewRow[];
-};
-
-export async function importOcrReview(data: ReviewData) {
+export async function importOcrReview(input: unknown) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     throw new Error("Unauthorized");
   }
+  const payload = ocrReviewSchema.parse(input);
   const userId = session.user.id;
 
-  const { weekStartDate, rows } = data;
-  const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+  await db.transaction(async (tx) => {
+    for (const row of payload.rows) {
+      for (let idx = 0; idx < 7; idx += 1) {
+        const hours = row.hours[idx];
+        if (!Number.isFinite(hours) || hours <= 0) {
+          continue;
+        }
+        const date = payload.weekStartDate + idx * DAY_MS;
+        const baseWhere = and(
+          eq(timesheetEntries.userId, userId),
+          eq(timesheetEntries.date, date),
+          row.projectId == null
+            ? isNull(timesheetEntries.projectId)
+            : eq(timesheetEntries.projectId, row.projectId),
+          row.taskId == null
+            ? isNull(timesheetEntries.taskId)
+            : eq(timesheetEntries.taskId, row.taskId),
+          row.roleId == null
+            ? isNull(timesheetEntries.roleId)
+            : eq(timesheetEntries.roleId, row.roleId),
+          eq(timesheetEntries.entryType, row.entryType ?? "Work")
+        );
 
-  const entriesToInsert: (typeof timesheetEntries.$inferInsert)[] = [];
+        const [existing] = await tx
+          .select({ id: timesheetEntries.id })
+          .from(timesheetEntries)
+          .where(baseWhere)
+          .limit(1);
 
-  for (const row of rows) {
-    if (!row.projectId) continue; // Skip rows without project
-
-    for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
-      const hours = row.hours[dayIndex];
-      if (hours > 0) {
-        const date = weekStartDate + dayIndex * ONE_DAY_MS;
-        entriesToInsert.push({
-          id: crypto.randomUUID(),
-          userId,
-          date: new Date(date), // FIX: Ensure Date object
-          hours,
-          projectId: row.projectId,
-          taskId: row.taskId,
-          roleId: row.roleId,
-          entryType: row.entryType,
-          status: "Draft",
-          description: "Imported from screenshot",
-        });
+        if (existing) {
+          await tx
+            .update(timesheetEntries)
+            .set({ hours, status: "Draft" })
+            .where(eq(timesheetEntries.id, existing.id));
+        } else {
+          await tx.insert(timesheetEntries).values({
+            id: crypto.randomUUID(),
+            date,
+            hours,
+            description: "Imported from screenshot",
+            projectId: row.projectId ?? null,
+            taskId: row.taskId ?? null,
+            roleId: row.roleId ?? null,
+            entryType: row.entryType ?? "Work",
+            status: "Draft",
+            userId,
+          });
+        }
       }
     }
-  }
+  });
 
-  if (entriesToInsert.length > 0) {
-    await db.insert(timesheetEntries).values(entriesToInsert);
-    await recalculateLieuLedgerForUser(userId);
-    revalidatePath("/entries");
-    revalidatePath("/dashboard");
-  }
+  await recalculateLieuLedgerForUser(userId);
+  revalidatePath("/entries");
+  revalidatePath("/dashboard");
+  revalidatePath("/calendar");
+  revalidatePath("/reports");
 }
