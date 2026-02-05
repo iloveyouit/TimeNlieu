@@ -194,7 +194,7 @@ A monthly grid showing work patterns at a glance:
 
 ## Phase 7 — Reports & Export
 
-**Status: pending.**
+**Status: complete.**
 
 The output artefacts — what gets sent to payroll, billed to clients, or
 kept for personal records.
@@ -339,7 +339,7 @@ Phase 3   Weekly Timesheet Grid         ← complete
 Phase 4   Lieu Calculation Engine       ← complete
 Phase 5   Dashboard                     ← complete
 Phase 6   Calendar View                 ← complete
-Phase 7   Reports & Export              ← output artefacts
+Phase 7   Reports & Export              ← complete
 Phase 8   Screenshot Upload & OCR       ← input shortcut; high effort
 Phase 9   Notifications                 ← supporting feature
 Phase 10  Admin & Multi-User            ← operational maturity

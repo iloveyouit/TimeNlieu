@@ -56,3 +56,16 @@ export const submitWeekSchema = z.object({
 export const monthDataSchema = z.object({
   monthStartDate: z.number(),
 });
+
+export const ocrReviewSchema = z.object({
+  weekStartDate: z.number(),
+  rows: z.array(
+    z.object({
+      projectId: z.string().nullable().optional(),
+      taskId: z.string().nullable().optional(),
+      roleId: z.string().nullable().optional(),
+      entryType: z.enum(["Work", "Admin"]).default("Work"),
+      hours: z.array(z.number()),
+    })
+  ),
+});
