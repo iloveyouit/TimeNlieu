@@ -36,7 +36,7 @@ export async function importOcrReview(input: unknown) {
         const date = payload.weekStartDate + idx * DAY_MS;
         const baseWhere = and(
           eq(timesheetEntries.userId, userId),
-          eq(timesheetEntries.date, date),
+          eq(timesheetEntries.date, new Date(date)),
           row.projectId == null
             ? isNull(timesheetEntries.projectId)
             : eq(timesheetEntries.projectId, row.projectId),
@@ -63,7 +63,7 @@ export async function importOcrReview(input: unknown) {
         } else {
           await tx.insert(timesheetEntries).values({
             id: crypto.randomUUID(),
-            date,
+            date: new Date(date),
             hours,
             description: "Imported from screenshot",
             projectId: row.projectId ?? null,

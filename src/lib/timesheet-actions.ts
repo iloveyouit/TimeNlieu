@@ -1,6 +1,7 @@
 "use server";
 
 import { getServerSession } from "next-auth/next";
+import type { Session } from "next-auth";
 import crypto from "crypto";
 import { and, eq, gte, lt, isNull } from "drizzle-orm";
 import { authOptions } from "@/lib/auth";
@@ -19,7 +20,7 @@ import {
   weekRangeUtc,
 } from "@/lib/timesheet";
 
-function requireUserId(session: Awaited<ReturnType<typeof getServerSession>>) {
+function requireUserId(session: Session | null) {
   if (!session?.user?.id) {
     throw new Error("Not authenticated");
   }
@@ -69,7 +70,7 @@ export async function upsertTimesheetEntry(input: unknown) {
 
   const baseWhere = and(
     eq(timesheetEntries.userId, userId),
-    eq(timesheetEntries.date, date),
+    eq(timesheetEntries.date, new Date(date)),
     payload.projectId == null
       ? isNull(timesheetEntries.projectId)
       : eq(timesheetEntries.projectId, payload.projectId),
@@ -112,7 +113,7 @@ export async function upsertTimesheetEntry(input: unknown) {
   const entryId = crypto.randomUUID();
   await db.insert(timesheetEntries).values({
     id: entryId,
-    date,
+    date: new Date(date),
     hours,
     description: null,
     projectId: payload.projectId ?? null,
@@ -143,8 +144,8 @@ export async function updateWeekRowMeta(input: unknown) {
     .where(
       and(
         rowWhere(payload.previous, userId),
-        gte(timesheetEntries.date, start),
-        lt(timesheetEntries.date, end),
+        gte(timesheetEntries.date, new Date(start)),
+        lt(timesheetEntries.date, new Date(end)),
         eq(timesheetEntries.status, "Draft")
       )
     );
@@ -161,8 +162,8 @@ export async function deleteWeekRow(input: unknown) {
     .where(
       and(
         rowWhere(payload.row, userId),
-        gte(timesheetEntries.date, start),
-        lt(timesheetEntries.date, end),
+        gte(timesheetEntries.date, new Date(start)),
+        lt(timesheetEntries.date, new Date(end)),
         eq(timesheetEntries.status, "Draft")
       )
     );
@@ -181,8 +182,8 @@ export async function submitWeek(input: unknown) {
     .where(
       and(
         eq(timesheetEntries.userId, userId),
-        gte(timesheetEntries.date, start),
-        lt(timesheetEntries.date, end),
+        gte(timesheetEntries.date, new Date(start)),
+        lt(timesheetEntries.date, new Date(end)),
         eq(timesheetEntries.status, "Draft")
       )
     );

@@ -55,8 +55,8 @@ export async function generateNotificationsForUser(userId: string, now = new Dat
       .where(
         and(
           eq(timesheetEntries.userId, userId),
-          gte(timesheetEntries.date, currentWeekRange.start),
-          lt(timesheetEntries.date, currentWeekRange.end)
+          gte(timesheetEntries.date, new Date(currentWeekRange.start)),
+          lt(timesheetEntries.date, new Date(currentWeekRange.end))
         )
       );
     const hasDraft = entries.some((entry) => entry.status === "Draft");
@@ -72,7 +72,7 @@ export async function generateNotificationsForUser(userId: string, now = new Dat
             ? "You have not logged any hours this week."
             : "You have Draft entries that need submission.",
           isRead: false,
-          createdAt: Date.now(),
+          createdAt: new Date(),
           metadata: { key, weekStartDate: currentWeekStart },
         });
       }
@@ -87,8 +87,8 @@ export async function generateNotificationsForUser(userId: string, now = new Dat
     .where(
       and(
         eq(timesheetEntries.userId, userId),
-        gte(timesheetEntries.date, anomalyStart),
-        lt(timesheetEntries.date, now.getTime())
+        gte(timesheetEntries.date, new Date(anomalyStart)),
+        lt(timesheetEntries.date, now)
       )
     );
   const dayTotals = new Map<number, number>();
@@ -111,7 +111,7 @@ export async function generateNotificationsForUser(userId: string, now = new Dat
           title: "Unusually long day logged",
           message: `You logged ${total.toFixed(2)} hours on ${new Date(dayStart).toLocaleDateString("en-US")}.`,
           isRead: false,
-          createdAt: Date.now(),
+          createdAt: new Date(),
           metadata: { key, dayStart },
         });
       }
@@ -125,8 +125,8 @@ export async function generateNotificationsForUser(userId: string, now = new Dat
     .where(
       and(
         eq(timesheetEntries.userId, userId),
-        gte(timesheetEntries.date, previousWeekRange.start),
-        lt(timesheetEntries.date, previousWeekRange.end)
+        gte(timesheetEntries.date, new Date(previousWeekRange.start)),
+        lt(timesheetEntries.date, new Date(previousWeekRange.end))
       )
     );
   const prevTotal = prevWeekEntries.reduce((sum, entry) => sum + entry.hours, 0);
@@ -140,7 +140,7 @@ export async function generateNotificationsForUser(userId: string, now = new Dat
         title: "No hours logged last week",
         message: "You logged zero hours in the previous week.",
         isRead: false,
-        createdAt: Date.now(),
+        createdAt: new Date(),
         metadata: { key, weekStartDate: previousWeekStart },
       });
     }
