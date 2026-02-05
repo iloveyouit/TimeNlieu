@@ -37,8 +37,8 @@ export async function getReportDataForUser(
 
   const where = [
     eq(timesheetEntries.userId, userId),
-    gte(timesheetEntries.date, startDate),
-    lt(timesheetEntries.date, endDate),
+    gte(timesheetEntries.date, new Date(startDate)),
+    lt(timesheetEntries.date, new Date(endDate)),
   ];
   if (status !== "All") {
     where.push(eq(timesheetEntries.status, status));
@@ -64,10 +64,10 @@ export async function getReportDataForUser(
   const rowMap = new Map<string, WeeklyRow>();
 
   for (const entry of entries) {
-    const weekStart = startOfWeekUtc(entry.date);
+    const weekStart = startOfWeekUtc(entry.date.getTime());
     weeklyTotals.set(weekStart, (weeklyTotals.get(weekStart) ?? 0) + entry.hours);
 
-    const date = new Date(entry.date);
+    const date = entry.date;
     const monthKey = `${date.getUTCFullYear()}-${String(
       date.getUTCMonth() + 1
     ).padStart(2, "0")}`;
@@ -103,7 +103,7 @@ export async function getReportDataForUser(
     }
 
     const row = rowMap.get(rowKey)!;
-    const dayIndex = new Date(entry.date).getUTCDay();
+    const dayIndex = entry.date.getUTCDay();
     const value = Number(entry.hours.toFixed(2));
     if (dayIndex === 0) row.sun += value;
     if (dayIndex === 1) row.mon += value;

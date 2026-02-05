@@ -33,8 +33,8 @@ export async function getMonthDataForUser(userId: string, monthStartDate: number
       .where(
         and(
           eq(timesheetEntries.userId, userId),
-          gte(timesheetEntries.date, start),
-          lt(timesheetEntries.date, end)
+          gte(timesheetEntries.date, new Date(start)),
+          lt(timesheetEntries.date, new Date(end))
         )
       ),
     db.select().from(projects).orderBy(asc(projects.name)),
@@ -62,14 +62,14 @@ export async function getMonthDataForUser(userId: string, monthStartDate: number
   > = {};
 
   for (const entry of entries) {
-    const key = toDateKey(entry.date);
+    const key = toDateKey(entry.date.getTime());
     totals[key] = (totals[key] ?? 0) + entry.hours;
     const project = entry.projectId ? projectMap.get(entry.projectId) : null;
     const task = entry.taskId ? taskMap.get(entry.taskId) : null;
     const role = entry.roleId ? roleMap.get(entry.roleId) : null;
     const row = {
       id: entry.id,
-      date: entry.date,
+      date: entry.date.getTime(),
       hours: entry.hours,
       projectName: project ? `${project.code} — ${project.name}` : "Unassigned",
       taskName: task ? `${task.code ? `${task.code} — ` : ""}${task.name}` : "Unassigned",

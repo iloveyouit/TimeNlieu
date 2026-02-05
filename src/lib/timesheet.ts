@@ -52,8 +52,8 @@ export async function getWeekDataForUser(userId: string, weekStartDateMs: number
         .where(
           and(
             eq(timesheetEntries.userId, userId),
-            gte(timesheetEntries.date, start),
-            lt(timesheetEntries.date, end)
+            gte(timesheetEntries.date, new Date(start)),
+            lt(timesheetEntries.date, new Date(end))
           )
         ),
       db.select().from(projects).orderBy(asc(projects.name)),
@@ -85,7 +85,7 @@ export async function recalculateLieuLedgerForUser(userId: string) {
 
   const totals = new Map<number, number>();
   for (const entry of entries) {
-    const weekStart = startOfWeekUtc(entry.date);
+    const weekStart = startOfWeekUtc(entry.date.getTime());
     totals.set(weekStart, (totals.get(weekStart) ?? 0) + entry.hours);
   }
 
@@ -101,7 +101,7 @@ export async function recalculateLieuLedgerForUser(userId: string) {
     return {
       id: `${userId}-${week.weekStartDate}`,
       userId,
-      weekStartDate: week.weekStartDate,
+      weekStartDate: new Date(week.weekStartDate),
       totalHours: Number(week.totalHours.toFixed(2)),
       overtimeHours: Number(overtimeHours.toFixed(2)),
       lieuEarned: Number(lieuEarned.toFixed(2)),
