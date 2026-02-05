@@ -9,6 +9,7 @@ export const users = sqliteTable('users', {
   image: text('image'),
   password: text('password'),
   isAdmin: integer('isAdmin', { mode: 'boolean' }).default(false),
+  initialLieuBalance: real('initialLieuBalance').default(0),
 });
 
 export const accounts = sqliteTable(

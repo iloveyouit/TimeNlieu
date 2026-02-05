@@ -3,7 +3,7 @@
 ## Context
 
 TimeNlieu is a timesheet and Time in Lieu tracker built for an enterprise
-managed-services consultant.  The consultant works across multiple client
+managed-services consultant. The consultant works across multiple client
 sites simultaneously, logs hours per project and task each day, and earns
 lieu time for any hours worked above 40 in a week.
 
@@ -12,7 +12,7 @@ in `attached_assets/` — a Microsoft Dynamics 365 timesheet grid showing
 projects (U-OPS, LVC-IGS-INF…), tasks, roles (Server, Team Member,
 Operational Support), entry types (Work, Administration), daily hour
 columns, row and column totals, week navigation, and entry statuses
-(Approved, Submitted, etc.).  That grid, or something functionally
+(Approved, Submitted, etc.). That grid, or something functionally
 equivalent, is the core of the product.
 
 ---
@@ -22,16 +22,16 @@ equivalent, is the core of the product.
 The following work is already shipped and functional:
 
 - **Authentication** — NextAuth.js credentials provider backed by the
-  `users` table with bcrypt password hashing.  Sign-in flow working
-  end-to-end.  Seed admin account (`test@example.com` / `password`)
+  `users` table with bcrypt password hashing. Sign-in flow working
+  end-to-end. Seed admin account (`test@example.com` / `password`)
   created on first startup via `src/db/seed.ts`.
 - **Docker** — multi-stage `Dockerfile`, `docker-compose.yml`, named
   volume for SQLite persistence, auto-migration via
   `src/instrumentation.ts` on container start.
-- **Database** — Drizzle ORM on SQLite.  Schema covers `users`,
+- **Database** — Drizzle ORM on SQLite. Schema covers `users`,
   `accounts`, `sessions`, `verificationTokens`, `timesheetEntries`,
   `projects`, `projectTasks`, `roles`, `lieuLedger`, `config`, and
-  `notifications`.  WAL mode and foreign keys enabled.  Migration
+  `notifications`. WAL mode and foreign keys enabled. Migration
   tracked in `drizzle/`.
 - **Entries grid** — Entries page is now an interactive weekly grid
   with navigation, row management, inline hour entry, and live totals.
@@ -42,7 +42,7 @@ The following work is already shipped and functional:
   `data/imports/timesheet_hours.csv`.
 - **Page skeleton** — Dashboard, Upload, Calendar, Reports, Admin pages
   exist with layout (sidebar + header) but no data or interactive logic.
-- **UI library** — 47 Shadcn UI components installed.  Recharts,
+- **UI library** — 47 Shadcn UI components installed. Recharts,
   react-hook-form, zod, date-fns all available and unused so far.
 - **Build** — `next build` passes clean (zero errors, zero warnings).
 - **Server Actions** — mutation pattern established: Zod validation in
@@ -55,7 +55,7 @@ The following work is already shipped and functional:
 
 **Status: complete.**
 
-- Prisma schema, migrations, and generated client deleted.  The dead
+- Prisma schema, migrations, and generated client deleted. The dead
   ESLint ignore rule for `src/generated/` removed.
 - Credentials provider wired against the `users` table with bcrypt.
   `src/db/seed.ts` creates one admin account on first run; called from
@@ -70,8 +70,8 @@ The following work is already shipped and functional:
 **Status: complete.**
 
 The current `timesheetEntries` table is a single row per entry with
-`date + hours + description`.  The Dynamics 365 reference shows entries
-structured as project → task → role → type → daily hours.  The schema
+`date + hours + description`. The Dynamics 365 reference shows entries
+structured as project → task → role → type → daily hours. The schema
 must expand before any feature work begins.
 
 New tables:
@@ -97,7 +97,7 @@ lieuLedger — id, userId, weekStartDate, totalHours, overtimeHours,
 ```
 
 `runningBalance` is written on every mutation so it is always
-queryable without recalculating history.  The 40-hour weekly threshold
+queryable without recalculating history. The 40-hour weekly threshold
 is stored in a `config` table (or env var) — not a magic number.
 
 Migration generated and applied.
@@ -108,13 +108,13 @@ Migration generated and applied.
 
 **Status: complete.**
 
-This is the daily-use interface.  Everything else in the app is a
+This is the daily-use interface. Everything else in the app is a
 different view of the data this grid produces.
 
 The Entries page becomes an interactive weekly grid:
 
 | Project | Task | Role | Type | Sun | Mon | Tue | Wed | Thu | Fri | Sat | Total |
-|---------|------|------|------|-----|-----|-----|-----|-----|-----|-----|-------|
+| ------- | ---- | ---- | ---- | --- | --- | --- | --- | --- | --- | --- | ----- |
 
 Key behaviours:
 
@@ -123,15 +123,15 @@ Key behaviours:
 - **Row management** — add a new project-task row, duplicate an
   existing row (common pattern: same project, different days), delete a
   row.
-- **Inline hour entry** — click any day cell to enter hours.  Tab moves
-  to the next cell.  Values validate as numeric, 0–24, max two decimal
+- **Inline hour entry** — click any day cell to enter hours. Tab moves
+  to the next cell. Values validate as numeric, 0–24, max two decimal
   places.
 - **Totals** — row totals (right column) and column totals (footer row)
-  update live as hours are typed.  The footer also shows whether the
+  update live as hours are typed. The footer also shows whether the
   week is over or under the lieu threshold.
-- **Status** — each row starts as Draft.  A Submit button on the page
+- **Status** — each row starts as Draft. A Submit button on the page
   flips all Draft rows for the displayed week to Submitted in one action.
-- **Auto-save** — entries persist on blur.  A subtle visual indicator
+- **Auto-save** — entries persist on blur. A subtle visual indicator
   (border colour, opacity) distinguishes a cell that has unsaved state.
 
 ---
@@ -142,7 +142,7 @@ Key behaviours:
 
 The business logic that turns a timesheet into a lieu tracker:
 
-- On every entry save, recalculate `totalHours` for that week.  If
+- On every entry save, recalculate `totalHours` for that week. If
   greater than the configured threshold (default 40), compute
   `overtimeHours` and write `lieuEarned` to `lieuLedger`.
 - `runningBalance` is the cumulative sum of `lieuEarned` across all
@@ -151,7 +151,7 @@ The business logic that turns a timesheet into a lieu tracker:
 - The weekly grid footer shows the week's status: under threshold,
   at threshold, or X hours of lieu earned.
 - Calculation is a single server-side function, called after any entry
-  create/update/delete.  Nothing is computed on the client.
+  create/update/delete. Nothing is computed on the client.
 
 ---
 
@@ -159,19 +159,19 @@ The business logic that turns a timesheet into a lieu tracker:
 
 **Status: complete.**
 
-The landing page after sign-in.  Four sections using Recharts (already
+The landing page after sign-in. Four sections using Recharts (already
 a dependency) and Shadcn Card components (already available):
 
 - **Lieu Balance card** — the running balance, large and prominent.
-  Green if positive.  A secondary line shows the change vs. last week.
-- **This Week card** — total hours logged so far this week.  A progress
-  bar toward the 40-hour threshold.  If already over, shows hours of
+  Green if positive. A secondary line shows the change vs. last week.
+- **This Week card** — total hours logged so far this week. A progress
+  bar toward the 40-hour threshold. If already over, shows hours of
   lieu earned this week.
-- **Hours by Project** — donut chart.  Defaults to the current week;
-  a toggle switches to trailing 4 weeks.  Shows where time is actually
+- **Hours by Project** — donut chart. Defaults to the current week;
+  a toggle switches to trailing 4 weeks. Shows where time is actually
   going.
-- **Weekly Trend** — line chart, trailing 8–12 weeks.  Total hours per
-  week with a horizontal reference line at the threshold.  Weeks that
+- **Weekly Trend** — line chart, trailing 8–12 weeks. Total hours per
+  week with a horizontal reference line at the threshold. Weeks that
   earned lieu are visually distinct.
 
 ---
@@ -184,7 +184,7 @@ A monthly grid showing work patterns at a glance:
 
 - Each day cell displays the total hours logged that day.
 - Colour-coded: no entry (muted), under 8 hrs (light), 8 hrs (neutral),
-  over 8 hrs (amber).  Weekend columns are a different shade.
+  over 8 hrs (amber). Weekend columns are a different shade.
 - Clicking a day opens a side panel showing that day's entries (same
   data as the weekly grid, filtered to one day) with the ability to add
   or edit inline.
@@ -200,38 +200,44 @@ The output artefacts — what gets sent to payroll, billed to clients, or
 kept for personal records.
 
 - **Weekly report** — a single-page summary: project breakdown, daily
-  totals, overtime, lieu earned.  Formatted for printing or PDF export.
-- **Monthly report** — same structure rolled up to a month.  Includes
+  totals, overtime, lieu earned. Formatted for printing or PDF export.
+- **Monthly report** — same structure rolled up to a month. Includes
   all weeks and cumulative lieu.
-- **Filters** — date range, project, status.  Final reports should
+- **Filters** — date range, project, status. Final reports should
   default to Approved entries only.
 - **CSV export** — flat table of all entries in the filtered range.
   Column headers match the weekly grid.
-- **PDF export** — the weekly or monthly report rendered to a PDF.  Use
+- **PDF export** — the weekly or monthly report rendered to a PDF. Use
   a library such as `react-pdf` or `jspdf`.
 
 ---
 
 ## Phase 8 — Screenshot Upload & OCR
 
-**Status: pending.**
+**Status: partial (CSV/Excel import complete, OCR pending).**
 
-The "screenshot-to-entries" workflow from the original spec.  Reduces
-manual data entry when the source already exists (e.g. a screenshot of
-a Dynamics 365 view or a client portal).
+The "file-to-entries" workflow for importing historical data and reducing
+manual data entry.
 
-- **Upload UI** — the placeholder on the Upload page becomes a real
-  drag-and-drop zone.  Accepts JPEG and PNG.  Shows a preview of the
-  uploaded image.
+**Completed:**
+
+- **CSV/Excel import** — tabbed upload page accepts CSV and Excel files.
+  Parser extracts `entry_date` (or `date`) and `hours` columns. Review
+  screen shows parsed entries before import. Entries are saved as Draft
+  with lieu ledger recalculation.
+- **Initial lieu balance** — users migrating from other systems can have
+  an initial lieu balance set by an admin in the Admin → Users tab. This
+  starting balance is included in all lieu ledger calculations.
+
+**Pending:**
+
 - **OCR** — call an external API (Google Cloud Vision or AWS Textract
-  both handle tabular data well).  Extract the grid structure and map
+  both handle tabular data well). Extract the grid structure and map
   columns to project, task, role, and daily hours.
 - **Review screen** — OCR output is shown as a pre-filled weekly grid,
-  fully editable before import.  Clearly mark extracted fields vs.
-  fields that need manual correction.  This step is mandatory — OCR on
+  fully editable before import. Clearly mark extracted fields vs.
+  fields that need manual correction. This step is mandatory — OCR on
   timesheet screenshots is imperfect.
-- **Import** — on confirmation the reviewed entries are saved as Draft
-  for the selected week.
 - **Fallback** — if OCR fails or returns unusable output, show the
   uploaded image alongside an empty grid so the user can type from it
   without leaving the page.
@@ -242,7 +248,7 @@ a Dynamics 365 view or a client portal).
 
 **Status: pending.**
 
-The `notifications` table already exists.  Wire it up:
+The `notifications` table already exists. Wire it up:
 
 - **Lieu milestones** — "You have earned 10 hours of lieu this month."
 - **Weekly submission reminder** — fires end-of-week (configurable day)
@@ -250,9 +256,9 @@ The `notifications` table already exists.  Wire it up:
 - **Anomaly alerts** — a single day logged above 12 hours, or a full
   week with zero hours after the week has passed.
 - **Notification centre** — bell icon in the header with an unread
-  badge.  Click expands a panel listing notifications with timestamps
+  badge. Click expands a panel listing notifications with timestamps
   and read / unread state.
-- **Delivery** — in-app only at this stage.  Email and webhook delivery
+- **Delivery** — in-app only at this stage. Email and webhook delivery
   are a Phase 11 addition.
 
 ---
@@ -265,8 +271,8 @@ Operational maturity — the ability to manage reference data and,
 eventually, other people's timesheets.
 
 - **Project & Task CRUD** — admins add, edit, or deactivate projects
-  and tasks.  This is the master data that populates the dropdowns in
-  the weekly grid.  Deactivated entries stop appearing in new rows but
+  and tasks. This is the master data that populates the dropdowns in
+  the weekly grid. Deactivated entries stop appearing in new rows but
   remain visible on historical data.
 - **Role management** — add or edit the roles list.
 - **User management** — list all users, activate or deactivate accounts,
@@ -274,7 +280,7 @@ eventually, other people's timesheets.
 - **Manager view** — an admin or designated manager can view any user's
   weekly grid and reports, filtered by user.
 - **Approval workflow** — managers can Approve or Reject Submitted
-  entries.  Rejected entries return to Draft with an attached note.
+  entries. Rejected entries return to Draft with an attached note.
   This maps directly to the Entry Status column in the Dynamics 365
   reference.
 
@@ -287,22 +293,22 @@ eventually, other people's timesheets.
 Production-readiness: security, auditability, and the auth model an
 enterprise environment actually requires.
 
-- **SSO via Microsoft Entra ID.**  The reference screenshot is Dynamics
-  365, which means the organisation already uses Microsoft 365.  NextAuth
-  supports the Microsoft provider out of the box.  This becomes the
-  primary sign-in method for production.  Credentials provider stays as
+- **SSO via Microsoft Entra ID.** The reference screenshot is Dynamics
+  365, which means the organisation already uses Microsoft 365. NextAuth
+  supports the Microsoft provider out of the box. This becomes the
+  primary sign-in method for production. Credentials provider stays as
   a fallback for local development.
-- **Role-based access control.**  Three roles: Consultant (own data
+- **Role-based access control.** Three roles: Consultant (own data
   only), Manager (own data + direct reports), Admin (everything).
   Enforced server-side on every data access, not just in the UI.
-- **Audit trail.**  An append-only `auditLog` table records who did
+- **Audit trail.** An append-only `auditLog` table records who did
   what and when — entry creates, edits, status changes, approvals.
   Non-negotiable for anything that touches time and pay data.
-- **Database migration to PostgreSQL.**  SQLite is appropriate for
-  development and single-user Docker deployments.  For a shared
-  production instance, switch to PostgreSQL.  Drizzle supports both
+- **Database migration to PostgreSQL.** SQLite is appropriate for
+  development and single-user Docker deployments. For a shared
+  production instance, switch to PostgreSQL. Drizzle supports both
   dialects — the change is the dialect setting in `drizzle.config.ts`
-  and the connection string.  Add connection pooling (PgBouncer or
+  and the connection string. Add connection pooling (PgBouncer or
   similar).
 - **Rate limiting** on the sign-in endpoint.
 
@@ -315,16 +321,16 @@ enterprise environment actually requires.
 TimeNlieu becomes part of the existing toolchain rather than a
 standalone tool.
 
-- **Dynamics 365 import.**  The reference screenshot IS a Dynamics 365
-  timesheet view.  An import pathway — via the Dynamics 365 REST API or
+- **Dynamics 365 import.** The reference screenshot IS a Dynamics 365
+  timesheet view. An import pathway — via the Dynamics 365 REST API or
   an exported CSV/Excel file — pulls entries into TimeNlieu for lieu
-  tracking.  The source of truth for project billing may remain in
+  tracking. The source of truth for project billing may remain in
   Dynamics 365; TimeNlieu's job is the lieu calculation and personal
   tracking layer on top.
-- **Outlook calendar sync.**  Log an entry in TimeNlieu and it creates
-  a calendar event (or vice versa).  Uses the Microsoft Graph API — the
+- **Outlook calendar sync.** Log an entry in TimeNlieu and it creates
+  a calendar event (or vice versa). Uses the Microsoft Graph API — the
   same auth token obtained during Entra ID sign-in.
-- **Teams / Slack webhooks.**  Route the notification alerts (weekly
+- **Teams / Slack webhooks.** Route the notification alerts (weekly
   reminders, lieu milestones) to a Teams or Slack channel alongside
   in-app delivery.
 
@@ -340,7 +346,7 @@ Phase 4   Lieu Calculation Engine       ← complete
 Phase 5   Dashboard                     ← complete
 Phase 6   Calendar View                 ← complete
 Phase 7   Reports & Export              ← complete
-Phase 8   Screenshot Upload & OCR       ← input shortcut; high effort
+Phase 8   Screenshot Upload & OCR       ← partial (CSV/Excel done)
 Phase 9   Notifications                 ← supporting feature
 Phase 10  Admin & Multi-User            ← operational maturity
 Phase 11  Enterprise Hardening          ← production readiness
@@ -348,5 +354,5 @@ Phase 12  System Integrations           ← ecosystem fit
 ```
 
 Phases 3 and 4 are the line between "skeleton app" and "actually usable
-tool."  Everything before that is plumbing; everything after is polish
+tool." Everything before that is plumbing; everything after is polish
 and scale.

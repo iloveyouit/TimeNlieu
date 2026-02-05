@@ -6,6 +6,7 @@ import {
   projects,
   roles,
   timesheetEntries,
+  users,
 } from "@/db/schema";
 import { and, asc, eq, gte, lt } from "drizzle-orm";
 
@@ -84,6 +85,16 @@ export async function getWeekDataForUser(userId: string, weekStartDateMs: number
 
 export async function recalculateLieuLedgerForUser(userId: string) {
   const threshold = await getWeeklyThreshold();
+  
+  // Fetch user's initial lieu balance
+  const [user] = await db
+    .select({ initialLieuBalance: users.initialLieuBalance })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  
+  const initialBalance = user?.initialLieuBalance ?? 0;
+  
   const entries = await db
     .select({
       date: timesheetEntries.date,
@@ -102,7 +113,8 @@ export async function recalculateLieuLedgerForUser(userId: string) {
     .map(([weekStartDate, totalHours]) => ({ weekStartDate, totalHours }))
     .sort((a, b) => a.weekStartDate - b.weekStartDate);
 
-  let runningBalance = 0;
+  // Start with the user's initial balance
+  let runningBalance = initialBalance;
   const rows = weeks.map((week) => {
     const overtimeHours = Math.max(0, week.totalHours - threshold);
     const lieuEarned = overtimeHours;
