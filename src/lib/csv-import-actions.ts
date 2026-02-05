@@ -1,7 +1,7 @@
 "use server";
 
 import crypto from "crypto";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
@@ -38,46 +38,50 @@ export async function importTimesheetEntries(
   let importedCount = 0;
   let skippedCount = 0;
 
-  await db.transaction(async (tx) => {
-    for (const entry of entries) {
-      try {
-        // Check for existing entry on the same date
-        const [existing] = await tx
-          .select({ id: timesheetEntries.id })
-          .from(timesheetEntries)
-          .where(eq(timesheetEntries.date, entry.date))
-          .limit(1);
+  // Process entries sequentially (SQLite doesn't support async transactions)
+  for (const entry of entries) {
+    try {
+      // Check for existing entry on the same date for this user
+      const [existing] = await db
+        .select({ id: timesheetEntries.id })
+        .from(timesheetEntries)
+        .where(
+          and(
+            eq(timesheetEntries.date, entry.date),
+            eq(timesheetEntries.userId, userId)
+          )
+        )
+        .limit(1);
 
-        if (existing) {
-          // Update existing entry
-          await tx
-            .update(timesheetEntries)
-            .set({ hours: entry.hours, status: "Draft" })
-            .where(eq(timesheetEntries.id, existing.id));
-          importedCount++;
-        } else {
-          // Insert new entry
-          await tx.insert(timesheetEntries).values({
-            id: crypto.randomUUID(),
-            date: entry.date,
-            hours: entry.hours,
-            description: "Imported from file",
-            projectId: null,
-            taskId: null,
-            roleId: null,
-            entryType: "Work",
-            status: "Draft",
-            userId,
-          });
-          importedCount++;
-        }
-      } catch (err) {
-        const dateStr = entry.date.toISOString().split("T")[0];
-        errors.push(`Failed to import entry for ${dateStr}: ${err instanceof Error ? err.message : "Unknown error"}`);
-        skippedCount++;
+      if (existing) {
+        // Update existing entry
+        await db
+          .update(timesheetEntries)
+          .set({ hours: entry.hours, status: "Draft" })
+          .where(eq(timesheetEntries.id, existing.id));
+        importedCount++;
+      } else {
+        // Insert new entry
+        await db.insert(timesheetEntries).values({
+          id: crypto.randomUUID(),
+          date: entry.date,
+          hours: entry.hours,
+          description: "Imported from file",
+          projectId: null,
+          taskId: null,
+          roleId: null,
+          entryType: "Work",
+          status: "Draft",
+          userId,
+        });
+        importedCount++;
       }
+    } catch (err) {
+      const dateStr = entry.date.toISOString().split("T")[0];
+      errors.push(`Failed to import entry for ${dateStr}: ${err instanceof Error ? err.message : "Unknown error"}`);
+      skippedCount++;
     }
-  });
+  }
 
   // Recalculate lieu ledger after import
   await recalculateLieuLedgerForUser(userId);
